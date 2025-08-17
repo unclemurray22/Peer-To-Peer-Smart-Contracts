@@ -1,0 +1,514 @@
+# ZapAI Deployment Guide
+
+This document provides comprehensive instructions for deploying the ZapAI Lightning Network Smart Contracts P2P Marketplace in various environments.
+
+## 🚀 Quick Start (Replit Deployment)
+
+The easiest way to deploy ZapAI is using Replit, which provides automatic scaling and integrated development tools.
+
+### Replit Deployment Steps
+
+1. **Fork Repository**
+   - Visit [Replit](https://replit.com)
+   - Import this GitHub repository
+   - Replit will automatically detect the Node.js configuration
+
+2. **Environment Configuration**
+   ```bash
+   # Optional: For Lightning Network integration
+   LND_TLS_CERT=your_lnd_tls_cert_path
+   LND_MACAROON=your_lnd_macaroon_path
+   LND_SOCKET=your_lnd_node_address:10009
+   ```
+
+3. **Deploy**
+   - Click "Run" to start the development server
+   - Click "Deploy" for production deployment
+   - Your app will be available at `https://your-repl-name.replit.app`
+
+## 🏗️ Traditional Deployment
+
+### Prerequisites
+- Node.js 18 or higher
+- npm or yarn package manager
+- (Optional) PostgreSQL database
+- (Optional) Lightning Network node (LND)
+
+### 1. Environment Setup
+
+#### Production Environment Variables
+```bash
+# Application Configuration
+NODE_ENV=production
+PORT=5000
+
+# Database Configuration (Optional)
+DATABASE_URL=postgresql://user:password@localhost:5432/zapaı
+
+# Lightning Network Configuration (Optional)
+LND_TLS_CERT=/path/to/lnd/tls.cert
+LND_MACAROON=/path/to/lnd/data/chain/bitcoin/mainnet/admin.macaroon
+LND_SOCKET=localhost:10009
+
+# Security Configuration
+SESSION_SECRET=your-secure-session-secret
+JWT_SECRET=your-jwt-secret-key
+```
+
+#### Development Environment Variables
+```bash
+# Application Configuration
+NODE_ENV=development
+PORT=5000
+
+# Development will automatically use simulation mode
+# No Lightning Network credentials required
+```
+
+### 2. Build Process
+
+```bash
+# Install dependencies
+npm install
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
+```
+
+### 3. Database Setup (Optional)
+
+#### Using PostgreSQL
+```sql
+-- Create database
+CREATE DATABASE zapaı;
+
+-- Create user
+CREATE USER zapaı_user WITH PASSWORD 'your-secure-password';
+
+-- Grant privileges
+GRANT ALL PRIVILEGES ON DATABASE zapaı TO zapaı_user;
+```
+
+#### Database Migration
+The application will automatically create necessary tables on first run when using PostgreSQL. For development, it uses in-memory storage.
+
+## ⚡ Lightning Network Setup
+
+### LND (Lightning Network Daemon) Configuration
+
+#### 1. Install LND
+```bash
+# Download latest LND release
+wget https://github.com/lightningnetwork/lnd/releases/download/v0.17.0-beta/lnd-linux-amd64-v0.17.0-beta.tar.gz
+
+# Extract and install
+tar -xzf lnd-linux-amd64-v0.17.0-beta.tar.gz
+sudo install -m 0755 -o root -g root lnd-linux-amd64-v0.17.0-beta/* /usr/local/bin/
+```
+
+#### 2. Configure LND
+Create `/home/lnd/.lnd/lnd.conf`:
+```ini
+[Application Options]
+debuglevel=info
+maxpendingchannels=5
+alias=ZapAI-Node
+color=#3399FF
+
+[Bitcoin]
+bitcoin.active=1
+bitcoin.testnet=1
+bitcoin.node=bitcoind
+
+[Bitcoind]
+bitcoind.rpcuser=bitcoin
+bitcoind.rpcpass=your-bitcoin-rpc-password
+bitcoind.zmqpubrawblock=tcp://127.0.0.1:28332
+bitcoind.zmqpubrawtx=tcp://127.0.0.1:28333
+
+[tor]
+tor.active=1
+tor.v3=1
+```
+
+#### 3. Start LND
+```bash
+# Start LND daemon
+lnd --lnddir=/home/lnd/.lnd
+
+# Create wallet (first time only)
+lncli --lnddir=/home/lnd/.lnd create
+
+# Unlock wallet
+lncli --lnddir=/home/lnd/.lnd unlock
+```
+
+#### 4. Configure ZapAI
+```bash
+# Set environment variables
+export LND_TLS_CERT=/home/lnd/.lnd/tls.cert
+export LND_MACAROON=/home/lnd/.lnd/data/chain/bitcoin/testnet/admin.macaroon
+export LND_SOCKET=localhost:10009
+```
+
+### Alternative: Phoenix Wallet Integration
+```bash
+# Phoenix wallet connection (if available)
+export LND_SOCKET=your-phoenix-node:9735
+export LND_MACAROON=your-phoenix-macaroon
+export LND_TLS_CERT=your-phoenix-tls-cert
+```
+
+## 🐳 Docker Deployment
+
+### Dockerfile
+```dockerfile
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy application files
+COPY . .
+
+# Build application
+RUN npm run build
+
+# Expose port
+EXPOSE 5000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:5000/api/health || exit 1
+
+# Start application
+CMD ["npm", "start"]
+```
+
+### Docker Compose
+```yaml
+version: '3.8'
+
+services:
+  zapaı:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://zapaı_user:password@postgres:5432/zapaı
+    depends_on:
+      - postgres
+    volumes:
+      - ./lnd:/app/lnd:ro  # Optional: Mount LND credentials
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=zapaı
+      - POSTGRES_USER=zapaı_user
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+```
+
+### Deploy with Docker
+```bash
+# Build and start services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f zapaı
+
+# Scale application (if needed)
+docker-compose up -d --scale zapaı=3
+```
+
+## ☁️ Cloud Deployment
+
+### AWS EC2 Deployment
+
+#### 1. Launch EC2 Instance
+```bash
+# Launch Ubuntu 22.04 LTS instance
+# Minimum: t3.medium (2 vCPU, 4GB RAM)
+# Recommended: t3.large (2 vCPU, 8GB RAM) for Lightning Network
+```
+
+#### 2. Setup Environment
+```bash
+# Update system
+sudo apt update && sudo apt upgrade -y
+
+# Install Node.js
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# Install PM2 (process manager)
+sudo npm install -g pm2
+
+# Clone and setup application
+git clone https://github.com/unclemurray22/Peer-To-Peer-Smart-Contracts.git
+cd Peer-To-Peer-Smart-Contracts
+npm install
+npm run build
+```
+
+#### 3. Configure PM2
+Create `ecosystem.config.js`:
+```javascript
+module.exports = {
+  apps: [{
+    name: 'zapaı',
+    script: 'server/index.js',
+    instances: 'max',
+    exec_mode: 'cluster',
+    env: {
+      NODE_ENV: 'production',
+      PORT: 5000
+    },
+    env_production: {
+      NODE_ENV: 'production',
+      PORT: 5000,
+      DATABASE_URL: 'postgresql://user:pass@localhost:5432/zapaı'
+    }
+  }]
+};
+```
+
+#### 4. Start Application
+```bash
+# Start with PM2
+pm2 start ecosystem.config.js --env production
+
+# Save PM2 configuration
+pm2 save
+
+# Setup auto-start on boot
+pm2 startup
+```
+
+#### 5. Setup Nginx (Optional)
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
+
+    location / {
+        proxy_pass http://localhost:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+### Google Cloud Platform
+
+#### Cloud Run Deployment
+```bash
+# Build container
+gcloud builds submit --tag gcr.io/PROJECT-ID/zapaı
+
+# Deploy to Cloud Run
+gcloud run deploy zapaı \
+  --image gcr.io/PROJECT-ID/zapaı \
+  --platform managed \
+  --region us-central1 \
+  --allow-unauthenticated \
+  --set-env-vars NODE_ENV=production
+```
+
+### Heroku Deployment
+
+#### Setup
+```bash
+# Install Heroku CLI
+# Create Heroku app
+heroku create your-app-name
+
+# Set environment variables
+heroku config:set NODE_ENV=production
+heroku config:set LND_SOCKET=your-lnd-node:10009
+
+# Deploy
+git push heroku main
+
+# Scale dynos
+heroku ps:scale web=2
+```
+
+## 🔒 Security Configuration
+
+### SSL/TLS Setup
+```bash
+# Using Certbot for Let's Encrypt
+sudo apt install certbot python3-certbot-nginx
+sudo certbot --nginx -d your-domain.com
+```
+
+### Firewall Configuration
+```bash
+# UFW setup
+sudo ufw allow 22/tcp    # SSH
+sudo ufw allow 80/tcp    # HTTP
+sudo ufw allow 443/tcp   # HTTPS
+sudo ufw allow 9735/tcp  # Lightning Network (if running LND)
+sudo ufw enable
+```
+
+### Environment Security
+```bash
+# Secure environment variables
+chmod 600 .env
+chown app:app .env
+
+# Use secrets management in production
+# AWS: AWS Secrets Manager
+# GCP: Google Secret Manager  
+# Azure: Azure Key Vault
+```
+
+## 📊 Monitoring & Logging
+
+### Application Monitoring
+```bash
+# Install monitoring tools
+npm install -g clinic
+npm install -g autocannon
+
+# Performance monitoring with PM2
+pm2 monitor
+
+# Health checks
+curl http://localhost:5000/api/health
+```
+
+### Log Management
+```javascript
+// Configure structured logging
+const winston = require('winston');
+
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.json(),
+  transports: [
+    new winston.transports.File({ filename: 'error.log', level: 'error' }),
+    new winston.transports.File({ filename: 'combined.log' })
+  ]
+});
+```
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+#### Lightning Network Connection Issues
+```bash
+# Check LND status
+lncli getinfo
+
+# Verify certificates
+openssl x509 -in tls.cert -text -noout
+
+# Test connection
+grpcurl --insecure localhost:10009 lnrpc.Lightning/GetInfo
+```
+
+#### Application Issues
+```bash
+# Check application logs
+pm2 logs zapaı
+
+# Monitor system resources
+htop
+df -h
+free -h
+
+# Check network connectivity
+netstat -tulpn | grep 5000
+```
+
+#### Database Issues
+```bash
+# Check PostgreSQL status
+sudo systemctl status postgresql
+
+# Test database connection
+psql -h localhost -U zapaı_user -d zapaı
+```
+
+### Performance Optimization
+
+#### Application Tuning
+```javascript
+// Node.js optimization
+process.env.UV_THREADPOOL_SIZE = 128;
+process.env.NODE_OPTIONS = '--max-old-space-size=4096';
+```
+
+#### Database Optimization
+```sql
+-- Index optimization
+CREATE INDEX idx_contracts_user_status ON contracts(seller_id, status);
+CREATE INDEX idx_escrows_contract ON escrows(contract_id);
+CREATE INDEX idx_disputes_user ON disputes(claimant_id, respondent_id);
+```
+
+## 📞 Support & Maintenance
+
+### Regular Maintenance Tasks
+- **Daily**: Monitor logs and system health
+- **Weekly**: Update dependencies and security patches
+- **Monthly**: Database maintenance and backup verification
+- **Quarterly**: Security audit and performance review
+
+### Backup Strategy
+```bash
+# Database backup
+pg_dump zapaı > backup_$(date +%Y%m%d).sql
+
+# Application backup
+tar -czf app_backup_$(date +%Y%m%d).tar.gz /path/to/app
+
+# Lightning Network backup
+cp ~/.lnd/data/channel.backup /secure/backup/location/
+```
+
+### Update Process
+```bash
+# Update application
+git pull origin main
+npm install
+npm run build
+pm2 restart zapaı
+
+# Update system packages
+sudo apt update && sudo apt upgrade -y
+pm2 update
+```
+
+---
+
+For additional support or questions, please:
+- Check the main README.md file
+- Open an issue on GitHub
+- Review the application logs for detailed error information
