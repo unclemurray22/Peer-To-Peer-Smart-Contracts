@@ -1,0 +1,178 @@
+ZapAI - Lightning Network Smart Contracts P2P Marketplace
+A comprehensive peer-to-peer marketplace platform that enables secure transactions using Lightning Network smart contracts enhanced with AI Virtual Machine capabilities. The platform provides instant, low-cost Bitcoin transactions with built-in escrow functionality, intelligent contract analysis, automated dispute resolution, and fraud detection.
+
+🚀 Live Demo
+The application is deployed and running in development mode with Lightning Network simulation enabled for testing and demonstration purposes.
+
+✨ Key Features
+🔗 Lightning Network Integration
+Real LND Integration: Full support for Lightning Network Daemon (LND) via gRPC and REST APIs
+Automatic Fallback: Seamlessly switches to simulation mode when LND credentials unavailable
+Channel Management: Open, close, and monitor Lightning Network channels in real-time
+Invoice & Payments: Create invoices and send payments through the Lightning Network
+Network Monitoring: Live network statistics, node information, and channel status
+Advanced Escrow Integration: Secure escrow funding, milestone payments, and automated fund release
+🛡️ Advanced Escrow System
+Lightning Network-Powered Funding: Secure escrow funding using Lightning Network invoices with instant settlement
+Milestone-Based Payments: Break large transactions into verifiable milestones with buyer approval requirements
+Multi-Signature Security: Optional multi-signature escrow for high-value transactions requiring additional security
+Automated Fund Release: Configurable auto-release conditions based on time periods and completion criteria
+Inspection Periods: Configurable buyer inspection periods (3-30 days) before automatic fund release
+Security Deposits: Optional security deposits from both parties to ensure commitment and reduce fraud risk
+Real-Time Status Tracking: Complete visibility into escrow funding, milestones, and release processes
+🤖 AI-Powered Dispute Resolution
+Automated AI Analysis: AI mediator analyzes dispute evidence and provides resolution recommendations with confidence scores
+Comprehensive Evidence Collection: Support for multiple evidence types including documentation, communications, and transaction history
+Multiple Resolution Types: Full refunds, partial refunds, seller favor, or escalation to human arbitration
+Reasoning Engine: AI provides detailed step-by-step reasoning for all dispute decisions
+Priority Classification: Automatic dispute priority assignment (low, medium, high, urgent) based on transaction value and complexity
+Timeline Tracking: Complete audit trail from dispute filing to resolution with timestamp logging
+Human Arbitration Fallback: Complex disputes can be escalated to human arbitrators when AI confidence is insufficient
+🧠 AI Virtual Machine Integration
+Dynamic Contract Analysis: Real-time risk assessment and contract optimization based on transaction parameters
+Intelligent Terms Generation: AI-powered suggestions for escrow duration, inspection periods, and additional contract clauses
+Fraud Detection: Pattern recognition and behavioral analysis to identify potentially risky transactions
+Smart Recommendations: Context-aware suggestions for contract improvements and security enhancements
+External Marketplace Integration: Enhanced risk analysis for transactions from Facebook Marketplace, Craigslist, eBay, and other platforms
+🏪 Marketplace Features
+Smart Contract Creation: Intuitive contract wizard with AI assistance
+External Platform Integration: Support for items from Facebook Marketplace, Craigslist, eBay
+Category-Based Organization: Electronics, vehicles, real estate, services, and more
+Real-Time Activity Feed: Live updates on contract status and payments
+Comprehensive Dashboard: Overview of active contracts, transaction volume, and success rates
+🏗️ Technical Architecture
+Frontend Architecture
+React 18: Modern frontend framework with TypeScript
+Vite: Lightning-fast build tool with hot module replacement
+Tailwind CSS + shadcn/ui: Modern, accessible UI components
+TanStack React Query: Efficient server state management and caching
+Wouter: Lightweight client-side routing
+Backend Architecture
+Express.js: RESTful API server with TypeScript
+Lightning Integration: Real Lightning Network connectivity with simulation fallback
+Drizzle ORM: Type-safe database operations (PostgreSQL ready)
+Memory Storage: Development-friendly in-memory storage with database migration path
+Database Schema
+Users: Account management with Lightning Network balances
+Contracts: Smart contract definitions with escrow parameters
+Escrows: Advanced escrow management with milestone tracking
+Disputes: Comprehensive dispute resolution with AI analysis
+Transactions: Lightning Network payment records
+Activities: User activity feed for all platform events
+🚀 Getting Started
+Prerequisites
+Node.js 18+
+npm or yarn package manager
+(Optional) Lightning Network node with LND credentials for production
+Installation
+Clone the repository
+
+git clone https://github.com/unclemurray22/Peer-To-Peer-Smart-Contracts.git
+cd Peer-To-Peer-Smart-Contracts
+Install dependencies
+
+npm install
+Start development server
+
+npm run dev
+Access the application
+
+Open http://localhost:5000 in your browser
+The app will run in Lightning Network simulation mode for development
+Lightning Network Configuration (Optional)
+For production deployment with real Lightning Network integration, set these environment variables:
+
+# Lightning Network Daemon (LND) Configuration
+LND_TLS_CERT=path/to/tls.cert
+LND_MACAROON=path/to/admin.macaroon  
+LND_SOCKET=your-lnd-node:10009
+If these credentials are not provided, the system automatically falls back to simulation mode.
+
+🛠️ Development
+Project Structure
+├── client/                 # React frontend application
+│   ├── src/
+│   │   ├── components/    # Reusable UI components
+│   │   ├── pages/        # Application pages/routes
+│   │   ├── lib/          # Utilities and configurations
+│   │   └── hooks/        # Custom React hooks
+├── server/                # Express.js backend
+│   ├── index.ts          # Server entry point
+│   ├── routes.ts         # API route definitions
+│   ├── storage.ts        # Data storage interface
+│   └── lightning.ts      # Lightning Network integration
+├── shared/               # Shared TypeScript types and schemas
+└── components.json       # shadcn/ui configuration
+Available Scripts
+npm run dev - Start development server with hot reload
+npm run build - Build production bundle
+npm run preview - Preview production build locally
+API Endpoints
+Contracts
+GET /api/contracts - List all contracts
+POST /api/contracts - Create new contract
+GET /api/contracts/:id - Get specific contract
+PATCH /api/contracts/:id/status - Update contract status
+Escrow System
+GET /api/escrows - List user's escrows
+POST /api/contracts/:id/escrow - Create escrow for contract
+POST /api/escrows/:id/fund - Fund escrow with Lightning invoice
+POST /api/escrows/:id/release - Release escrow funds
+Dispute Resolution
+GET /api/disputes - List user's disputes
+POST /api/contracts/:id/disputes - Create dispute for contract
+POST /api/disputes/:id/ai-analyze - Trigger AI dispute analysis
+POST /api/disputes/:id/evidence - Submit dispute evidence
+Lightning Network
+GET /api/lightning/status - Get node status and network info
+GET /api/lightning/channels - List Lightning channels
+POST /api/lightning/channels - Open new Lightning channel
+POST /api/lightning/invoice - Create Lightning invoice
+POST /api/lightning/pay - Pay Lightning invoice
+🔐 Security Features
+Lightning Network Security: Leverages Lightning Network's inherent security for payments
+Escrow Protection: Funds held securely until contract completion or dispute resolution
+AI Fraud Detection: Advanced pattern recognition to identify suspicious transactions
+Multi-Signature Support: Optional multi-sig for high-value transactions
+Audit Trail: Complete transaction and dispute resolution history
+Automated Verification: AI-powered contract verification and risk assessment
+🌐 Production Deployment
+Replit Deployment (Recommended)
+The application is optimized for Replit deployment with automatic scaling and integrated database support.
+
+Fork this repository on Replit
+Set Lightning Network environment variables (optional)
+Deploy using Replit's one-click deployment
+Traditional Deployment
+Build the application: npm run build
+Set up PostgreSQL database (optional - can use memory storage)
+Configure Lightning Network credentials
+Deploy to your preferred hosting platform
+📈 Roadmap
+ Multi-Currency Support: Support for additional cryptocurrencies beyond Bitcoin
+ Mobile Application: React Native mobile app for iOS and Android
+ Advanced Analytics: Comprehensive transaction and marketplace analytics
+ Integration APIs: RESTful APIs for third-party marketplace integration
+ Governance System: Decentralized governance for platform parameters
+ Advanced AI Features: Enhanced fraud detection and risk assessment models
+🤝 Contributing
+Fork the repository
+Create your feature branch (git checkout -b feature/amazing-feature)
+Commit your changes (git commit -m 'Add amazing feature')
+Push to the branch (git push origin feature/amazing-feature)
+Open a Pull Request
+📄 License
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+🙏 Acknowledgments
+Lightning Network Labs for LND and Lightning Network infrastructure
+Bitcoin Community for the foundational technology
+React Team for the excellent frontend framework
+Replit for the amazing development and deployment platform
+📞 Support
+For support, questions, or feature requests:
+
+Open an issue on GitHub
+Check the documentation in the /docs folder
+Review the inline code comments for technical details
+Built with ⚡ Lightning Network and 🤖 AI by the ZapAI Team
